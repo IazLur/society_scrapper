@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
+const API = window.CONFIG?.API_URL || 'http://127.0.0.1:5000'
+
 function Login({onLogin, switchToRegister}){
   const [email,setEmail]=useState('');
   const [password,setPassword]=useState('');
@@ -8,7 +10,7 @@ function Login({onLogin, switchToRegister}){
   const submit=async(e)=>{
     e.preventDefault();
     setError('');
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const r=await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
     if(r.ok){
       const data=await r.json();
       onLogin(data.token,data.username);
@@ -44,7 +46,7 @@ function Register({onRegister, switchToLogin}){
   const submit=async(e)=>{
     e.preventDefault();
     setError('');
-    const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,email,password})});
+    const r=await fetch(`${API}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,email,password})});
     if(r.ok){
       onRegister();
     }else{
@@ -82,7 +84,7 @@ function Search({token,username}){
   const search=async(e)=>{
     e.preventDefault();
     const params=new URLSearchParams({domain});
-    const r=await fetch('/api/search?'+params.toString(),{headers:{'Authorization':'Bearer '+token}});
+    const r=await fetch(`${API}/api/search?`+params.toString(),{headers:{'Authorization':'Bearer '+token}});
     if(r.ok){
       const data=await r.json();
       setResults(data.results);

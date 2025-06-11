@@ -44,3 +44,15 @@ npm run dev
 ```
 
 The app provides a login/registration screen and, once logged in, a small interface to search for companies by domain.
+
+### API configuration
+
+The React frontend reads the API base URL from `frontend/config.json`. By default the file contains:
+
+```json
+{
+  "API_URL": "http://127.0.0.1:5000"
+}
+```
+
+Edit this file if your backend runs on a different address.
