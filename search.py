@@ -1,8 +1,11 @@
 import argparse
 import csv
+from functools import lru_cache
+
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import spacy
 
 
 def guess_company_name(domain: str) -> str:
@@ -37,6 +40,38 @@ def search_company(name: str, **filters):
     r = requests.get(url, params=params, timeout=10)
     r.raise_for_status()
     return r.json().get("results", [])
+
+
+# --- Natural language helpers ---
+@lru_cache(maxsize=1)
+def _get_nlp():
+    """Load spacy French model once."""
+    return spacy.load("fr_core_news_sm")
+
+
+@lru_cache(maxsize=1)
+def _departement_lookup():
+    """Fetch mapping of departement names to codes."""
+    resp = requests.get("https://geo.api.gouv.fr/departements", timeout=10)
+    return {d["nom"].lower(): d["code"] for d in resp.json()}
+
+
+def parse_natural_query(text: str) -> dict:
+    """Return search parameters guessed from free text."""
+    nlp = _get_nlp()
+    deps = _departement_lookup()
+    doc = nlp(text)
+    departement = None
+    tokens = []
+    for token in doc:
+        t = token.text.strip()
+        low = t.lower()
+        if departement is None and low in deps:
+            departement = deps[low]
+        else:
+            tokens.append(t)
+    name = " ".join(tokens).strip() or text
+    return {"name": name, "departement": departement, "region": None, "ville": None}
 
 
 def compute_score(company: dict) -> float:
@@ -101,8 +136,8 @@ def export_csv(companies, path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Search companies by domain")
-    parser.add_argument("domain", help="Domain name")
+    parser = argparse.ArgumentParser(description="Search companies")
+    parser.add_argument("query", help="Domain or free text query")
     parser.add_argument("--ape")
     parser.add_argument("--departement")
     parser.add_argument("--region")
@@ -110,13 +145,17 @@ def main():
     parser.add_argument("--export", help="Export CSV path")
     args = parser.parse_args()
 
-    name = guess_company_name(args.domain)
+    if "." in args.query:
+        params = {"name": guess_company_name(args.query)}
+    else:
+        params = parse_natural_query(args.query)
+
     companies = search_company(
-        name,
+        params["name"],
         ape=args.ape,
-        departement=args.departement,
-        region=args.region,
-        ville=args.ville,
+        departement=params.get("departement") or args.departement,
+        region=params.get("region") or args.region,
+        ville=params.get("ville") or args.ville,
     )
     for c in companies:
         c["score"] = compute_score(c)

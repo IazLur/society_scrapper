@@ -78,12 +78,12 @@ function Register({onRegister, switchToLogin}){
 }
 
 function Search({token,username}){
-  const [domain,setDomain]=useState('');
+  const [query,setQuery]=useState('');
   const [results,setResults]=useState([]);
   const [name,setName]=useState('');
   const search=async(e)=>{
     e.preventDefault();
-    const params=new URLSearchParams({domain});
+    const params=new URLSearchParams({q: query});
     const r=await fetch(`${API}/api/search?`+params.toString(),{headers:{'Authorization':'Bearer '+token}});
     if(r.ok){
       const data=await r.json();
@@ -96,7 +96,7 @@ function Search({token,username}){
       <h2>Welcome {username}</h2>
       <form onSubmit={search} className="mb-3">
         <div className="input-group">
-          <input className="form-control" placeholder="Domain" value={domain} onChange={e=>setDomain(e.target.value)} />
+          <input className="form-control" placeholder="Domain or search phrase" value={query} onChange={e=>setQuery(e.target.value)} />
           <button className="btn btn-success">Search</button>
         </div>
       </form>
