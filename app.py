@@ -72,21 +72,24 @@ def require_auth(f):
 @app.route('/api/search')
 @require_auth
 def search_companies():
-    domain = request.args.get('domain')
-    if not domain:
-        return jsonify({'error':'missing domain'}), 400
-    name = search.guess_company_name(domain)
+    query = request.args.get('q') or request.args.get('domain')
+    if not query:
+        return jsonify({'error':'missing query'}), 400
+    if '.' in query:
+        params = {'name': search.guess_company_name(query)}
+    else:
+        params = search.parse_natural_query(query)
     companies = search.search_company(
-        name,
+        params['name'],
         ape=request.args.get('ape'),
-        departement=request.args.get('departement'),
-        region=request.args.get('region'),
-        ville=request.args.get('ville'),
+        departement=params.get('departement') or request.args.get('departement'),
+        region=params.get('region') or request.args.get('region'),
+        ville=params.get('ville') or request.args.get('ville'),
     )
     for c in companies:
         c['score'] = search.compute_score(c)
     companies.sort(key=lambda x: x['score'], reverse=True)
-    return jsonify({'name': name, 'results': companies})
+    return jsonify({'name': params['name'], 'results': companies})
 
 if __name__ == '__main__':
     init_db()

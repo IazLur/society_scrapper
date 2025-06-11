@@ -11,7 +11,8 @@ The Flask application in `app.py` exposes the features of `search.py` through a 
 ### Install dependencies
 
 ```bash
-pip install flask flask-cors werkzeug itsdangerous requests beautifulsoup4
+pip install flask flask-cors werkzeug itsdangerous requests beautifulsoup4 spacy torch transformers
+python -m spacy download fr_core_news_sm
 ```
 
 ### Run the API
@@ -24,7 +25,8 @@ The API will create a local `app.db` SQLite database. Endpoints:
 
 - `POST /api/register` with JSON `{username, email, password}`
 - `POST /api/login` with JSON `{email, password}` returns a token
-- `GET /api/search?domain=example.com` authenticated with header `Authorization: Bearer <token>`
+- `GET /api/search?q=coiffeur+paris` authenticated with header `Authorization: Bearer <token>`
+  The `q` parameter accepts either a domain name or a short French phrase like `"esthéticienne vaucluse"`.
 
 ## Frontend
 
@@ -43,7 +45,7 @@ npm install
 npm run dev
 ```
 
-The app provides a login/registration screen and, once logged in, a small interface to search for companies by domain.
+The app provides a login/registration screen and, once logged in, a small interface to search for companies by domain or free text.
 
 ### API configuration
 
