@@ -1,22 +1,46 @@
 # society_scrapper
 
-This project demonstrates a small proof of concept for retrieving company information from the public `recherche-entreprises` API. Given a domain name the script tries to guess the organisation name from the website title, queries the API, computes a simple score and optionally exports the result to CSV.
+This project contains a small proof of concept for retrieving company information using the public `recherche-entreprises` API.
 
-## Requirements
-- Python 3.10+
-- `requests`
-- `beautifulsoup4`
+The original `search.py` script can still be used from the command line, but a small web application is now provided.
 
-You can install the Python dependencies with:
+## Backend API
 
-```bash
-pip install requests beautifulsoup4
-```
+The Flask application in `app.py` exposes the features of `search.py` through a REST API and also implements a very small authentication system with SQLite.
 
-## Usage
+### Install dependencies
 
 ```bash
-python search.py example.com --ape 62.01Z --export results.csv
+pip install flask flask-cors werkzeug itsdangerous requests beautifulsoup4
 ```
 
-The script prints the found companies with their score and creates a CSV file with basic details.
+### Run the API
+
+```bash
+python app.py
+```
+
+The API will create a local `app.db` SQLite database. Endpoints:
+
+- `POST /api/register` with JSON `{username, email, password}`
+- `POST /api/login` with JSON `{email, password}` returns a token
+- `GET /api/search?domain=example.com` authenticated with header `Authorization: Bearer <token>`
+
+## Frontend
+
+A simple React application (Vite + Bootstrap) is located in the `frontend` folder.
+
+### Install dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+### Start development server
+
+```bash
+npm run dev
+```
+
+The app provides a login/registration screen and, once logged in, a small interface to search for companies by domain.
